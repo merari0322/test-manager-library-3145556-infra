@@ -48,3 +48,33 @@ No hay prórroga: suban avances parciales con commits pequeños durante la prueb
 | [`test-manager-library-3145556-page`](https://github.com/code-sena/test-manager-library-3145556-page) | Sitio público estático de presentación |
 | [`test-manager-library-3145556-infra`](https://github.com/code-sena/test-manager-library-3145556-infra) | Contenedores, red, volúmenes y motor de base de datos vacío |
 | [`test-manager-library-3145556-tool`](https://github.com/code-sena/test-manager-library-3145556-tool) | Utilidades: sembrador de datos de demostración |
+
+## Cómo levantar
+
+```bash
+cp .env.example .env        # completar los valores reales; .env nunca se versiona
+docker compose up -d        # motor vacío + api (migra y crea el admin al arrancar)
+docker compose --profile full up -d   # además app (requiere ../app con su Dockerfile)
+```
+
+Los seis repositorios deben estar clonados como carpetas hermanas (`../api`, `../app`).
+
+| Servicio | Puerto | Qué es |
+|---|---|---|
+| `db` | 5432 | PostgreSQL 16, base `library`, **sin tablas** |
+| `api` | 8000 | Backend Laravel (`/api/v1`) |
+| `app` | 5173 | Frontend React |
+
+### Qué hace y qué no hace este repositorio
+
+- Crea el motor vacío, el usuario, la red y los volúmenes. **No contiene `CREATE TABLE`** ([ADR-001](https://github.com/merari0322/test-manager-library-3145556-docs/blob/main/spec-python/adr/adr-001-propiedad-del-esquema.md)):
+  el esquema `library`, las tablas, restricciones y la semilla de categorías los crean las migraciones de `api`.
+- Supuesto declarado (ver INC-10 e INC-11 en ADR-005 del repo `docs`): ADR-001 se lee como una regla sobre la base de datos,
+  por eso este `docker-compose` también levanta `api` y `app`, como pide T-20.
+
+### Evidencia (T-20)
+
+```bash
+docker compose exec db psql -U library -d library -c "\dt library.*"
+# Did not find any relation named "library.*"  → el motor arranca vacío
+```
