@@ -53,8 +53,7 @@ No hay prórroga: suban avances parciales con commits pequeños durante la prueb
 
 ```bash
 cp .env.example .env        # completar los valores reales; .env nunca se versiona
-docker compose up -d        # motor vacío + api (migra y crea el admin al arrancar)
-docker compose --profile full up -d   # además app (requiere ../app con su Dockerfile)
+docker compose up -d        # motor vacío + api (migra y crea el admin al arrancar) + app
 ```
 
 Los seis repositorios deben estar clonados como carpetas hermanas (`../api`, `../app`).
