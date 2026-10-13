@@ -13,7 +13,7 @@ services:
       TZ: UTC
       PGTZ: UTC
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
@@ -35,7 +35,7 @@ services:
       COVERS_DIR: ${COVERS_DIR:-./var/covers}
       CORS_ORIGIN: ${CORS_ORIGIN}
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "8000:8000"
     volumes:
       - covers:/var/www/html/var/covers
     depends_on:
@@ -43,15 +43,12 @@ services:
         condition: service_healthy
     networks:
       - library
-    profiles: ["full"]
 
   app:
     build:
       context: ../app
-    environment:
-      VITE_API_URL: ${VITE_API_URL}
     ports:
-      - "${APP_PORT:-5173}:5173"
+      - "5173:5173"
     depends_on:
       - api
     networks:
