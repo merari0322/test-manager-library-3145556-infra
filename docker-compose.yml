@@ -1,0 +1,66 @@
+# Manager Library — local stack.
+# The database engine starts EMPTY: no CREATE TABLE here (ADR-001).
+# Schema, tables, constraints and category seed belong to the api migrations.
+name: manager-library
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - library
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ../api
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      COVERS_DIR: ${COVERS_DIR:-./var/covers}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - covers:/var/www/html/var/covers
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - library
+    profiles: ["full"]
+
+  app:
+    build:
+      context: ../app
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
+    ports:
+      - "${APP_PORT:-5173}:5173"
+    depends_on:
+      - api
+    networks:
+      - library
+    profiles: ["full"]
+
+volumes:
+  db_data:
+  covers:
+
+networks:
+  library:
